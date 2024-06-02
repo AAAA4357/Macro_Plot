@@ -1,0 +1,23 @@
+﻿<Window x:Class="Macro_Plot.TestWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Macro_Plot"
+        xmlns:draggable="clr-namespace:Macro_Plot.Draggable"
+        mc:Ignorable="d"
+        Title="TestWindow" Height="450" Width="800">
+    <Grid>
+        <Canvas>
+            <draggable:DraggableControl Width="100" Height="100">
+                <Rectangle Fill="Red"/>
+            </draggable:DraggableControl>
+            <draggable:AttachableControl Width="100" Height="100" Canvas.Left="200">
+                <Rectangle Fill="Green"/>
+            </draggable:AttachableControl>
+            <draggable:DraggableControl Width="100" Height="100" Canvas.Left="400" IsDraggable="False">
+                <Rectangle Fill="BLue"/>
+            </draggable:DraggableControl>
+        </Canvas>
+    </Grid>
+</Window>
