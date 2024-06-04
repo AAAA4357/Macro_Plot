@@ -104,8 +104,11 @@ namespace Macro_Plot.Draggable
 
         Storyboard? AttachStoryboard { get; set; }
 
+        protected bool IsAttached { get; private set; }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
+            if (!IsDragging) return;
             if (AttachStart_CursorPosition.HasValue && (Vector)Mouse.GetPosition((Canvas)Parent) != AttachStart_CursorPosition.Value)
             {
                 UnAttach();
@@ -138,8 +141,19 @@ namespace Macro_Plot.Draggable
             base.OnMouseUp(e);
             if (IsAttaching)
             {
+                double distance = (new Point(Canvas.GetLeft(this), Canvas.GetTop(this)) - AttachPoint).Length;
+                RoutedEventArgs args;
+                if (distance < AttachMinThreshold)
+                {
+                    Canvas.SetLeft(this, AttachPoint.X);
+                    Canvas.SetTop(this, AttachPoint.Y);
+                    UnAttach();
+                    Attach();
+                    return;
+                }
                 UnAttach();
-                RoutedEventArgs args = new(UnAttachRoutedEvent, this);
+                base.OnMouseMove(e);
+                args = new(UnAttachRoutedEvent, this);
                 RaiseEvent(args);
             }
         }
@@ -147,9 +161,10 @@ namespace Macro_Plot.Draggable
         protected override void OnMouseLeave(MouseEventArgs e)
         {
             base.OnMouseLeave(e);
-            if (IsAttaching)
+            if (IsAttaching && !IsAttached)
             {
                 UnAttach();
+                base.OnMouseMove(e);
                 RoutedEventArgs args = new(UnAttachRoutedEvent, this);
                 RaiseEvent(args);
             }
@@ -179,17 +194,16 @@ namespace Macro_Plot.Draggable
             Storyboard.SetTargetProperty(AttachYAnimation, new(Canvas.TopProperty));
             Storyboard.SetTarget(AttachYAnimation, this);
             AttachStoryboard.Children.Add(AttachYAnimation);
-            AttachStoryboard.Begin();
-            AttachStart_CursorPosition = (Vector)Mouse.GetPosition((Canvas)Parent);
             AttachStoryboard.Completed += (object? sender, EventArgs e) =>
             {
-                IsAttaching = false;
-                AttachStoryboard.Stop();
-                AttachStoryboard = null;
-                AttachStart_CursorPosition = null;
+                Canvas.SetLeft(this, AttachPoint.X);
+                Canvas.SetTop(this, AttachPoint.Y);
+                IsAttached = true;
                 RoutedEventArgs args = new(AttachCompleteRoutedEvent, this);
                 RaiseEvent(args);
             };
+            AttachStoryboard.Begin();
+            AttachStart_CursorPosition = (Vector)Mouse.GetPosition((Canvas)Parent);
         }
 
         public virtual void UnAttach()

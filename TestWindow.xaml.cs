@@ -23,5 +23,10 @@ namespace Macro_Plot
         {
             InitializeComponent();
         }
+
+        private void NodeControl_NodeSelected(object source, Node.NodeSelectedEventArgs e)
+        {
+            Console.WriteLine(new Point(Canvas.GetLeft(e.SelectedNode), Canvas.GetTop(e.SelectedNode)));
+        }
     }
 }

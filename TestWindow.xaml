@@ -5,10 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Macro_Plot"
         xmlns:draggable="clr-namespace:Macro_Plot.Draggable"
+        xmlns:node="clr-namespace:Macro_Plot.Node"
         mc:Ignorable="d"
         Title="TestWindow" Height="450" Width="800">
     <Grid>
-        <Canvas>
+        <node:NodeCanvas>
             <draggable:DraggableControl Width="100" Height="100">
                 <Rectangle Fill="Red"/>
             </draggable:DraggableControl>
@@ -18,6 +19,24 @@
             <draggable:DraggableControl Width="100" Height="100" Canvas.Left="400" IsDraggable="False">
                 <Rectangle Fill="BLue"/>
             </draggable:DraggableControl>
-        </Canvas>
+            <node:NodeControl Width="100" Height="100" Canvas.Left="200" Canvas.Top="120" NodeSelected="NodeControl_NodeSelected">
+                <node:NodeControl.NodePoints>
+                    <PointCollection>
+                        <Point X="0" Y="100"/>
+                        <Point X="100" Y="100"/>
+                    </PointCollection>
+                </node:NodeControl.NodePoints>
+                <Rectangle Fill="Black"/>
+            </node:NodeControl>
+            <node:NodeControl Width="100" Height="100" Canvas.Left="600" Canvas.Top="0" NodeSelected="NodeControl_NodeSelected">
+                <node:NodeControl.NodePoints>
+                    <PointCollection>
+                        <Point X="0" Y="100"/>
+                        <Point X="100" Y="100"/>
+                    </PointCollection>
+                </node:NodeControl.NodePoints>
+                <Rectangle Fill="Yellow"/>
+            </node:NodeControl>
+        </node:NodeCanvas>
     </Grid>
 </Window>
