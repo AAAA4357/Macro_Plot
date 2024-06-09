@@ -15,6 +15,8 @@ namespace Macro_Plot.Node
         {
             ID = new Random().Next();
             RelativeNode = relativeNode;
+            MouseDown += Node_MouseDown;
+            MouseUp += Node_MouseUp;
         }
 
         public Node(int id, NodeControl relativeNode)
@@ -23,29 +25,46 @@ namespace Macro_Plot.Node
             RelativeNode = relativeNode;
             Width = 20;
             Height = 20;
+            MouseDown += Node_MouseDown;
+            MouseUp += Node_MouseUp;
+        }
+
+        public static readonly DependencyProperty ConnectDirectionProperty = DependencyProperty.Register("ConnectDirection", typeof(double), typeof(Node), new PropertyMetadata(0d));
+
+        public static readonly DependencyProperty NodeTagProperty = DependencyProperty.Register("NodeTag", typeof(string), typeof(Node), new PropertyMetadata(string.Empty));
+
+        public double ConnectDirection
+        {
+            get { return (double)GetValue(ConnectDirectionProperty); }
+            set { SetValue(ConnectDirectionProperty, value); }
+        }
+
+        public string NodeTag
+        {
+            get { return (string)GetValue(NodeTagProperty); }
+            set { SetValue(NodeTagProperty, value); }
         }
 
         public int ID { get; }
 
         public NodeControl RelativeNode { get; }
 
-        protected override void OnMouseDown(MouseButtonEventArgs e)
+        public List<NodeConnection> Connection { get; set; } = [];
+
+        public Point Posistion { get; set; }
+
+        public void RefreshLocation(Point position)
         {
-            base.OnMouseDown(e);
-            NodeSelectedEventArgs args = new(NodeControl.NodeSelectedRoutedEvent, RelativeNode, this);
-            RelativeNode.RaiseEvent(args);
+            Canvas.SetLeft(this, position.X - ActualWidth / 2);
+            Canvas.SetTop(this, position.Y - ActualHeight / 2);
+            NodeCanvas canvas = (NodeCanvas)Parent;
+            canvas.Children.Remove(this);
+            canvas.Children.Add(this);
+            foreach (NodeConnection connection in Connection) connection.RefreshNodeLine();
         }
 
-        protected override void OnDragOver(DragEventArgs e)
-        {
-            base.OnDragOver(e);
-            ((NodeCanvas)RelativeNode.Parent).OnNodeMouseDrag(this);
-        }
+        private void Node_MouseUp(object sender, MouseButtonEventArgs e) => ((NodeCanvas)Parent).OnNodeMouseUp(this);
 
-        protected override void OnMouseUp(MouseButtonEventArgs e)
-        {
-            base.OnMouseUp(e);
-            ((NodeCanvas)RelativeNode.Parent).OnNodeMouseUp(this);
-        }
+        private void Node_MouseDown(object sender, MouseButtonEventArgs e) => ((NodeCanvas)Parent).OnNodeMouseDown(RelativeNode, this);
     }
 }

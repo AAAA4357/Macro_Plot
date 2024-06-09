@@ -27,9 +27,25 @@ namespace Macro_Plot.Utils
             }
         }
 
-        public ICollection<int> Keys => (ICollection<int>)inner_Conllection.Keys;
+        public ICollection<int> Keys
+        {
+            get
+            {
+                List<int> list = [];
+                foreach (object item in inner_Conllection.Keys) list.Add((int)item);
+                return list;
+            }
+        }
 
-        public ICollection<T> Values => (ICollection<T>)inner_Conllection.Values;
+        public ICollection<T> Values
+        {
+            get
+            {
+                List<T> list = [];
+                foreach (object item in inner_Conllection.Values) list.Add((T)item);
+                return list;
+            }
+        }
 
         public int Count => inner_Conllection.Count;
 
@@ -40,30 +56,18 @@ namespace Macro_Plot.Utils
         /// </summary>
         /// <param name="key">ID</param>
         /// <param name="value">控件</param>
-        /// <exception cref="InvalidOperationException">当控件父控件不为 Canvas 或不继承自 Canvas 时抛出</exception>
+        /// <exception cref="NotImplementedException">当控件父控件不为 Canvas 或不继承自 Canvas 时抛出</exception>
         public void Add(int key, T value)
         {
-            if (!value.Parent.GetType().IsAssignableTo(typeof(Canvas))) throw new InvalidOperationException("T 的父控件应继承 Canvas");
+            if (!value.Parent.GetType().IsAssignableTo(typeof(Canvas))) throw new NotImplementedException("T 的父控件应继承 Canvas");
             inner_Conllection.Add(key, value);
         }
 
-        [Obsolete("控件集合不支持键值对编辑", true)]
-        public void Add(KeyValuePair<int, T> item) => throw new InvalidOperationException("控件集合不支持键值对编辑");
-
         public void Clear() => inner_Conllection.Clear();
-
-        [Obsolete("控件集合不支持键值对编辑", true)]
-        public bool Contains(KeyValuePair<int, T> item) => throw new InvalidOperationException("控件集合不支持键值对编辑");
 
         public bool ContainsKey(int key) => inner_Conllection.ContainsKey(key);
 
-        [Obsolete("控件集合不支持键值对编辑", true)]
-        public void CopyTo(KeyValuePair<int, T>[] array, int arrayIndex) => throw new InvalidOperationException("控件集合不支持键值对编辑");
-
         public void CopyTo(Array array, int index) => inner_Conllection.CopyTo(array, index);
-
-        [Obsolete("控件集合不支持键值对编辑", true)]
-        public IEnumerator<KeyValuePair<int, T>> GetEnumerator() => throw new InvalidOperationException("控件集合不支持键值对编辑");
 
         public bool Remove(int key)
         {
@@ -71,9 +75,6 @@ namespace Macro_Plot.Utils
             inner_Conllection.Remove(key);
             return true;
         }
-
-        [Obsolete("控件集合不支持键值对编辑", true)]
-        public bool Remove(KeyValuePair<int, T> item) => throw new InvalidOperationException("控件集合不支持键值对编辑");
 
         public bool TryGetValue(int key, [MaybeNullWhen(false)] out T value)
         {
@@ -87,5 +88,20 @@ namespace Macro_Plot.Utils
         }
 
         IEnumerator IEnumerable.GetEnumerator() => inner_Conllection.GetEnumerator();
+
+        [Obsolete("控件集合不支持键值对编辑", true)]
+        public void Add(KeyValuePair<int, T> item) => throw new NotImplementedException("控件集合不支持键值对编辑");
+
+        [Obsolete("控件集合不支持键值对编辑", true)]
+        public bool Contains(KeyValuePair<int, T> item) => throw new NotImplementedException("控件集合不支持键值对编辑");
+
+        [Obsolete("控件集合不支持键值对编辑", true)]
+        public void CopyTo(KeyValuePair<int, T>[] array, int arrayIndex) => throw new NotImplementedException("控件集合不支持键值对编辑");
+
+        [Obsolete("控件集合不支持键值对编辑", true)]
+        public IEnumerator<KeyValuePair<int, T>> GetEnumerator() => throw new NotImplementedException("控件集合不支持键值对编辑");
+
+        [Obsolete("控件集合不支持键值对编辑", true)]
+        public bool Remove(KeyValuePair<int, T> item) => throw new NotImplementedException("控件集合不支持键值对编辑");
     }
 }

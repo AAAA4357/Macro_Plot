@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Macro_Plot.Node;
 
 namespace Macro_Plot
 {
@@ -22,11 +23,6 @@ namespace Macro_Plot
         public TestWindow()
         {
             InitializeComponent();
-        }
-
-        private void NodeControl_NodeSelected(object source, Node.NodeSelectedEventArgs e)
-        {
-            Console.WriteLine(new Point(Canvas.GetLeft(e.SelectedNode), Canvas.GetTop(e.SelectedNode)));
         }
     }
 }

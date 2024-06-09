@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -35,10 +34,9 @@ namespace Macro_Plot.Draggable
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
             base.OnMouseDown(e);
-            if (Parent.GetType() != typeof(Canvas) || !IsDraggable) return;
+            if (Parent.GetType().IsAssignableFrom(typeof(Canvas)) || !IsDraggable) return;
             IsDragging = true;
             MousePosition = (Vector)Mouse.GetPosition(this);
-            if (Parent.GetType() != typeof(Canvas)) return;
             UIElementCollection collection = ((Canvas)Parent).Children;
             collection.Remove(this);
             collection.Add(this);

@@ -13,13 +13,17 @@ namespace Macro_Plot.Node
 
         public object SyncRoot => this;
 
-        public int AddNode(Point position)
+        public int AddNode(NodePoint point)
         {
+            Point position = point.NodePosition;
             if (position.X > RelativeControl.ActualWidth || position.Y > RelativeControl.ActualHeight) throw new ArgumentException("节点位于控件之外");
             int id = new Random().Next();
             Node node = new(id, RelativeControl)
             {
-                Style = RelativeControl.NodeStyle
+                Posistion = position,
+                Style = RelativeControl.NodeStyle,
+                NodeTag = point.NodeTag,
+                ConnectDirection = point.NodeDirection / 180 * double.Pi
             };
             ((Canvas)RelativeControl.Parent).Children.Add(node);
             Canvas.SetLeft(node, Canvas.GetLeft(RelativeControl) + position.X - node.Width / 2);

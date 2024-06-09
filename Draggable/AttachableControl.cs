@@ -1,19 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.Timers;
+using Timer = System.Timers.Timer;
+using Macro_Plot.Utils;
 
 namespace Macro_Plot.Draggable
 {
@@ -24,17 +15,40 @@ namespace Macro_Plot.Draggable
             DefaultStyleKeyProperty.OverrideMetadata(typeof(AttachableControl), new FrameworkPropertyMetadata(typeof(AttachableControl)));
         }
 
-        public static readonly DependencyProperty IsAttachableProperty = DependencyProperty.Register("IsAttachable", typeof(bool), typeof(AttachableControl), new PropertyMetadata(true));
+        public AttachableControl()
+        {
+            AttachTimer = new(AttachMinMouseOverTime * 1000)
+            {
+                Enabled = false,
+                AutoReset = false
+            };
+            AttachTimer.Elapsed += (object? sender, ElapsedEventArgs e) =>
+            {
+                RoutedEventArgs args = new(AttachStartRoutedEvent, this);
+                RaiseEvent(args);
+                IsAttaching = true;
+                Dispatcher.Invoke(() =>
+                {
+                    AttachStoryboard?.Begin();
+                });
+                ((Timer)sender!).Enabled = false;
+            };
+            Loaded += AttachableControl_Loaded;
+        }
 
-        public static readonly DependencyProperty AttachPointProperty = DependencyProperty.Register("AttachPoint", typeof(Point), typeof(AttachableControl), new PropertyMetadata(new Point(0, 0)));
+        public static readonly DependencyProperty IsAttachableProperty = DependencyProperty.Register("IsAttachable", typeof(bool), typeof(AttachableControl), new PropertyMetadata(true));
 
         public static readonly DependencyProperty AttachRangeProperty = DependencyProperty.Register("AttachRange", typeof(double), typeof(AttachableControl), new PropertyMetadata(20d));
 
-        public static readonly DependencyProperty AttachMinThresholdProperty = DependencyProperty.Register("AttachMinThreshold", typeof(double), typeof(AttachableControl), new PropertyMetadata(20d));
+        public static readonly DependencyProperty AttachMinThresholdProperty = DependencyProperty.Register("AttachMinThreshold", typeof(double), typeof(AttachableControl), new PropertyMetadata(1d));
 
-        public static readonly DependencyProperty AttachDurationProperty = DependencyProperty.Register("AttachDuration", typeof(Duration), typeof(AttachableControl), new PropertyMetadata(new Duration(new(0, 0, 1))));
+        public static readonly DependencyProperty AttachMinMouseOverTimeProperty = DependencyProperty.Register("AttachMinMouseOverTime", typeof(double), typeof(AttachableControl), new PropertyMetadata(0.2d));
+
+        public static readonly DependencyProperty AttachDurationProperty = DependencyProperty.Register("AttachDuration", typeof(Duration), typeof(AttachableControl), new PropertyMetadata(new Duration(new(0, 0, 0, 0, 500))));
 
         public static readonly DependencyProperty AttachEasingFunctionProperty = DependencyProperty.Register("AttachEasingFunction", typeof(EasingFunctionBase), typeof(AttachableControl), new PropertyMetadata(new SineEase()));
+
+        public static readonly DependencyProperty AttachTagProperty = DependencyProperty.Register("AttachTag", typeof(string), typeof(AttachableControl), new PropertyMetadata(string.Empty));
 
         public static readonly RoutedEvent AttachStartRoutedEvent = EventManager.RegisterRoutedEvent("OnAttachStart", RoutingStrategy.Direct, typeof(RoutedEventHandler), typeof(AttachableControl));
 
@@ -50,12 +64,6 @@ namespace Macro_Plot.Draggable
             set { SetValue(IsAttachableProperty, value); }
         }
 
-        public Point AttachPoint
-        {
-            get { return (Point)GetValue(AttachPointProperty); }
-            set { SetValue(AttachPointProperty, value); }
-        }
-
         public double AttachRange
         {
             get { return (double)GetValue(AttachRangeProperty); }
@@ -66,6 +74,12 @@ namespace Macro_Plot.Draggable
         {
             get { return (double)GetValue(AttachMinThresholdProperty); }
             set { SetValue(AttachMinThresholdProperty, value); }
+        }
+
+        public double AttachMinMouseOverTime
+        {
+            get { return (double)GetValue(AttachMinMouseOverTimeProperty); }
+            set { SetValue(AttachMinMouseOverTimeProperty, value); }
         }
 
         public Duration AttachDuration
@@ -98,22 +112,64 @@ namespace Macro_Plot.Draggable
             remove { RemoveHandler(AttachCompleteRoutedEvent, value); }
         }
 
-        bool IsAttaching { get; set; }
+        public event RoutedEventHandler OnUnAttach
+        {
+            add { AddHandler(UnAttachRoutedEvent, value); }
+            remove { RemoveHandler(UnAttachRoutedEvent, value); }
+        }
 
-        Vector? AttachStart_CursorPosition { get; set; }
+        public string AttachTag
+        {
+            get { return (string)GetValue(AttachTagProperty); }
+            set { SetValue(AttachTagProperty, value); }
+        }
 
-        Storyboard? AttachStoryboard { get; set; }
+        AttachableCanvas? RelativeCanvas;
+
+        Point? AttachPoint;
+
+        bool IsAttaching;
+
+        Vector? AttachStart_CursorPosition;
+
+        Storyboard? AttachStoryboard;
+
+        Timer AttachTimer;
+
+        Point Position
+        {
+            get => new(double.IsNaN(Canvas.GetLeft(this)) ? 0d : Canvas.GetLeft(this), double.IsNaN(Canvas.GetTop(this)) ? 0d : Canvas.GetTop(this));
+        }
 
         protected bool IsAttached { get; private set; }
+
+        protected void StartTimer()
+        {
+            AttachTimer.Enabled = true;
+            AttachTimer.Start();
+        }
+
+        protected void StopTimer()
+        {
+            AttachTimer.Stop();
+            AttachTimer.Enabled = false;
+        }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
             if (!IsDragging) return;
-            if (AttachStart_CursorPosition.HasValue && (Vector)Mouse.GetPosition((Canvas)Parent) != AttachStart_CursorPosition.Value)
+            AttachPoint = RelativeCanvas!.GetNearestNeibor(Position, AttachTag);
+            if (AttachStart_CursorPosition.HasValue && (Vector)Mouse.GetPosition(RelativeCanvas) != AttachStart_CursorPosition.Value)
             {
+                if (IsAttached)
+                {
+                    RoutedEventArgs args = new(UnAttachRoutedEvent, this);
+                    RaiseEvent(args);
+                    IsAttached = false;
+                    return;
+                }
+                IsAttached = false;
                 UnAttach();
-                RoutedEventArgs args = new(UnAttachRoutedEvent, this);
-                RaiseEvent(args);
                 base.OnMouseMove(e);
                 return;
             }
@@ -121,18 +177,16 @@ namespace Macro_Plot.Draggable
             {
                 base.OnMouseMove(e);
             }
-            else
+            else if (!IsAttached)
             {
                 RoutedEventArgs args = new(AttachRoutedEvent, this);
                 RaiseEvent(args);
             }
             if (AttachStart_CursorPosition is not null) return;
-            double distance = (new Point(Canvas.GetLeft(this), Canvas.GetTop(this)) - AttachPoint).Length;
+            double distance = (Position - AttachPoint)!.Value.Length;
             if (distance <= AttachRange)
             {
                 Attach();
-                RoutedEventArgs args = new(AttachStartRoutedEvent, this);
-                RaiseEvent(args);
             }
         }
 
@@ -141,20 +195,15 @@ namespace Macro_Plot.Draggable
             base.OnMouseUp(e);
             if (IsAttaching)
             {
-                double distance = (new Point(Canvas.GetLeft(this), Canvas.GetTop(this)) - AttachPoint).Length;
-                RoutedEventArgs args;
+                double distance = (Position - AttachPoint)!.Value.Length;
                 if (distance < AttachMinThreshold)
                 {
-                    Canvas.SetLeft(this, AttachPoint.X);
-                    Canvas.SetTop(this, AttachPoint.Y);
-                    UnAttach();
-                    Attach();
+                    Canvas.SetLeft(this, AttachPoint!.Value.X);
+                    Canvas.SetTop(this, AttachPoint!.Value.Y);
                     return;
                 }
                 UnAttach();
                 base.OnMouseMove(e);
-                args = new(UnAttachRoutedEvent, this);
-                RaiseEvent(args);
             }
         }
 
@@ -165,19 +214,21 @@ namespace Macro_Plot.Draggable
             {
                 UnAttach();
                 base.OnMouseMove(e);
-                RoutedEventArgs args = new(UnAttachRoutedEvent, this);
-                RaiseEvent(args);
             }
+        }
+
+        private void AttachableControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            RelativeCanvas = this.GetAncestor<AttachableCanvas>() ?? throw new InvalidOperationException("AttachableControl必须处于AttachableCanvas布局内");
         }
 
         public virtual void Attach()
         {
-            IsAttaching = true;
             AttachStoryboard = new();
             DoubleAnimation AttachXAnimation = new()
             {
                 From = Canvas.GetLeft(this),
-                To = AttachPoint.X,
+                To = AttachPoint!.Value.X,
                 Duration = AttachDuration,
                 EasingFunction = AttachEasingFunction
             };
@@ -187,7 +238,7 @@ namespace Macro_Plot.Draggable
             DoubleAnimation AttachYAnimation = new()
             {
                 From = Canvas.GetTop(this),
-                To = AttachPoint.Y,
+                To = AttachPoint!.Value.Y,
                 Duration = AttachDuration,
                 EasingFunction = AttachEasingFunction
             };
@@ -196,21 +247,23 @@ namespace Macro_Plot.Draggable
             AttachStoryboard.Children.Add(AttachYAnimation);
             AttachStoryboard.Completed += (object? sender, EventArgs e) =>
             {
-                Canvas.SetLeft(this, AttachPoint.X);
-                Canvas.SetTop(this, AttachPoint.Y);
+                Canvas.SetLeft(this, AttachPoint!.Value.X);
+                Canvas.SetTop(this, AttachPoint!.Value.Y);
                 IsAttached = true;
                 RoutedEventArgs args = new(AttachCompleteRoutedEvent, this);
                 RaiseEvent(args);
             };
-            AttachStoryboard.Begin();
+            StartTimer();
             AttachStart_CursorPosition = (Vector)Mouse.GetPosition((Canvas)Parent);
         }
 
         public virtual void UnAttach()
         {
             IsAttaching = false;
+            IsAttached = false;
             AttachStoryboard?.Stop();
             AttachStoryboard = null;
+            StopTimer();
             AttachStart_CursorPosition = null;
         }
     }

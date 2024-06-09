@@ -10,32 +10,23 @@
         Title="TestWindow" Height="450" Width="800">
     <Grid>
         <node:NodeCanvas>
-            <draggable:DraggableControl Width="100" Height="100">
-                <Rectangle Fill="Red"/>
-            </draggable:DraggableControl>
-            <draggable:AttachableControl Width="100" Height="100" Canvas.Left="200">
-                <Rectangle Fill="Green"/>
-            </draggable:AttachableControl>
-            <draggable:DraggableControl Width="100" Height="100" Canvas.Left="400" IsDraggable="False">
-                <Rectangle Fill="BLue"/>
-            </draggable:DraggableControl>
-            <node:NodeControl Width="100" Height="100" Canvas.Left="200" Canvas.Top="120" NodeSelected="NodeControl_NodeSelected">
+            <node:NodeControl Canvas.Left="100" Canvas.Top="200">
                 <node:NodeControl.NodePoints>
-                    <PointCollection>
-                        <Point X="0" Y="100"/>
-                        <Point X="100" Y="100"/>
-                    </PointCollection>
+                    <node:NodePointCollection>
+                        <node:NodePoint NodePosition="0,50" NodeTag="1" NodeDirection="180"/>
+                        <node:NodePoint NodePosition="100,50" NodeTag="2"/>
+                    </node:NodePointCollection>
                 </node:NodeControl.NodePoints>
-                <Rectangle Fill="Black"/>
+                <Rectangle Width="100" Height="100" Fill="LightCyan"/>
             </node:NodeControl>
-            <node:NodeControl Width="100" Height="100" Canvas.Left="600" Canvas.Top="0" NodeSelected="NodeControl_NodeSelected">
+            <node:NodeControl Canvas.Left="400" Canvas.Top="200" NodeStartConnect="NodeControl_NodeStartConnect">
                 <node:NodeControl.NodePoints>
-                    <PointCollection>
-                        <Point X="0" Y="100"/>
-                        <Point X="100" Y="100"/>
-                    </PointCollection>
+                    <node:NodePointCollection>
+                        <node:NodePoint NodePosition="0,50" NodeTag="2" NodeDirection="180"/>
+                        <node:NodePoint NodePosition="100,50" NodeTag="1"/>
+                    </node:NodePointCollection>
                 </node:NodeControl.NodePoints>
-                <Rectangle Fill="Yellow"/>
+                <Rectangle Width="100" Height="100" Fill="LightCyan"/>
             </node:NodeControl>
         </node:NodeCanvas>
     </Grid>

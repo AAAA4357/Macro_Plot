@@ -65,7 +65,7 @@ namespace Macro_Plot.Node
         {
             if (!inner_Conllection.ContainsKey(key))
             {
-                value = null;
+                value = default;
                 return false;
             }
             value = (NodeControl)inner_Conllection[key]!;
